@@ -115,6 +115,20 @@ app.get("/", function(req, res) {
 		});
 });
 
+// Route for getting all saved Articles from the db
+app.get("/saved", function(req, res) {
+	db.Article.find({saved: true})
+		.then(function(dbArticle) {
+			var hbsObject = {
+				Article: dbArticle
+			};
+			res.render("saved", hbsObject);
+		})
+		.catch(function(err) {
+			res.json(err);
+		});
+});
+
 app.listen(PORT, function () {
 	console.log("Server listening on: http://localhost:" + PORT);
 });
