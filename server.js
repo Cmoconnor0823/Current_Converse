@@ -79,7 +79,7 @@ app.get("/scrape", function (req, res) {
 
 			//console.log("title result",result.title);
 			//console.log("title link",result.link); 
-            //console.log("title tease", result.tease); // gives short summary where applicable
+			//console.log("title tease", result.tease); // gives short summary where applicable
             
             
 			// Create a new Article using the `result` object built from scraping
@@ -97,6 +97,22 @@ app.get("/scrape", function (req, res) {
 		// Send a message to the client
 		res.send("Scrape Complete");
 	});
+});
+
+// Route for getting all Articles from the db
+app.get("/", function(req, res) {
+	db.Article.find({})
+		.sort("-_id")
+		.then(function(dbArticle) {
+			var hbsObject = {
+				Article: dbArticle,
+				title: "Current Politio Articles to begin Conversations"
+			};
+			res.render("index", hbsObject);
+		})
+		.catch(function(err) {
+			res.json(err);
+		});
 });
 
 app.listen(PORT, function () {
