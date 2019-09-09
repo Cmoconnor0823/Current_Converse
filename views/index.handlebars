@@ -16,3 +16,19 @@
             <a href="https://www.politico.com/technology" class="upper-link">Politico's Technology Page</a>
         </div>
     </div>
+
+    <div class="row">
+        <div class="col" id="articles">
+            {{#each Article}}
+            <div class="card mt-4 mb-4">
+                <div class="card-title mt-2 mb-0 ml-3 pl-1">
+                    <h5>{{this.title}}</h5>
+                    <button class="btn btn-success save-article ml-3" data-id={{this._id}}>Save Article</button>
+                </div>
+                <div class="card-body pt-1 pb-1">{{this.tease}}</div>
+                <a href={{this.url}} class="card-link text-right pr-2">See More...</a>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+</div>
