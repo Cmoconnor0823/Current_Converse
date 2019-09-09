@@ -37,7 +37,7 @@ var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/CurrentConvers
 mongoose.connect(MONGODB_URI, { useNewUrlParser: true });
 // // Connect to the Mongo DB -- old connection
 // mongoose.connect("mongodb://localhost/CurrentConverse", { useNewUrlParser: true });
-//var results = [];
+var results = [];
 
 
 // Routes
@@ -55,8 +55,7 @@ app.get("/scrape", function (req, res) {
 	// First, we grab the body of the html with axios
 	axios.get("https://www.politico.com/").then((response) => {
 		// Then, we load that into cheerio and save it to $ for a shorthand selector
-        var $ = cheerio.load(response.data);
-        var titlesArray = [];
+		var $ = cheerio.load(response.data);
 		//console.log(response.data);
 
 		//check name change for article and h2 look for something like media-item, media-item-summary media-item image
@@ -80,7 +79,7 @@ app.get("/scrape", function (req, res) {
 
 			//console.log("title result",result.title);
 			//console.log("title link",result.link); 
-            console.log("title tease", result.tease); // gives short summary where applicable
+            //console.log("title tease", result.tease); // gives short summary where applicable
             
             
 			// Create a new Article using the `result` object built from scraping
