@@ -31,8 +31,12 @@ app.engine("handlebars", exphbs({ defaultLayout: "main" }));
 app.set("view engine", "handlebars");
 app.set("index", __dirname + "/views");
 
-// Connect to the Mongo DB
-mongoose.connect("mongodb://localhost/CurrentConverse", { useNewUrlParser: true });
+// If deployed, use the deployed database. Otherwise use the local  database
+var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/CurrentConverse";
+// then change the ine below to 
+mongoose.connect(MONGODB_URI, { useNewUrlParser: true });
+// // Connect to the Mongo DB -- old connection
+// mongoose.connect("mongodb://localhost/CurrentConverse", { useNewUrlParser: true });
 var results = [];
 
 
@@ -47,52 +51,137 @@ app.get("/", function (req, res) {
 });
 
 // A GET route for scraping the echoJS website
-app.get("/scrape", function(req, res) {
+app.get("/scrape", function (req, res) {
 	// First, we grab the body of the html with axios
-	axios.get("https://www.nytimes.com/").then(function(response) {
+	axios.get("https://www.politico.com/").then((response) => {
 		// Then, we load that into cheerio and save it to $ for a shorthand selector
-        var $ = cheerio.load(response.data);
-        //console.log(response.data);
-  
-		// Now, we grab every h2 within an article tag, and do the following:
+		var $ = cheerio.load(response.data);
+		//console.log(response.data);
 
 		//check name change for article and h2 look for something like media-item, media-item-summary media-item image
 		// (meta__details p class for authors) (media-item_summary div class tease fo a short summary)
 		// (media-item_summary h1 class headline a href for link)
-		$("article").each(function(i, element) {
+		// stop trying story-frag.format-m
+		$(".media-item__summary").each((i, element) => {
+			// console.log("beginning of new article~~~~~~~~ /n", $(".media-item__summary").children().html());
 			// Save an empty result object
-			var result = [];
-            console.log("element", element);
-            console.log(result);
-            
-  
+			var result = {};
+			//console.log("element", element);--stop testing this
+			//console.log(i);-- returns the  number legnth of the element array
+
+			//console.log(result);
 			// Add the text and href of every link, 
 			// and save them as properties of the result object
-			result.title = $(this)
-				.children("a")
-				.text();
-			result.link = $(this)
-				.children("a")
-                .attr("href");
-                
-                console.log(result);
-  
+
+			result.title = $(element).find("h1 a").text();
+			result.link = $(element).find("h1 a").attr("href");
+			result.tease = $(element).find(".tease").text();
+
+			//console.log("title result",result.title);
+			//console.log("title link",result.link); 
+			//console.log("title tease", result.tease); // gives short summary where applicable
+            
+            
 			// Create a new Article using the `result` object built from scraping
 			db.Article.create(result)
-				.then(function(dbArticle) {
+				.then(function (dbArticle) {
 					// View the added result in the console
 					console.log(dbArticle);
 				})
-				.catch(function(err) {
+				.catch(function (err) {
 					// If an error occurred, log it
 					console.log(err);
 				});
 		});
-  
+
 		// Send a message to the client
 		res.send("Scrape Complete");
 	});
 });
+
+// Route for getting all Articles from the db
+app.get("/", function(req, res) {
+	db.Article.find({})
+		.sort("-_id")
+		.then(function(dbArticle) {
+			var hbsObject = {
+				Article: dbArticle,
+				title: "Current Politio Articles to begin Conversations"
+			};
+			res.render("index", hbsObject);
+		})
+		.catch(function(err) {
+			res.json(err);
+		});
+});
+
+// Route for getting all saved Articles from the db
+app.get("/saved", function(req, res) {
+	db.Article.find({saved: true})
+		.then(function(dbArticle) {
+			var hbsObject = {
+				Article: dbArticle
+			};
+			res.render("saved", hbsObject);
+		})
+		.catch(function(err) {
+			res.json(err);
+		});
+});
+
+// // Route for grabbing a specific Article by id, populate it with it's comment
+// app.get("/articles/:id", function(req, res) {
+// 	db.Article.findOne({ _id: req.params.id })
+// 		.populate("comment")
+// 		.then(function(dbArticle) {
+// 			res.json(dbArticle);
+// 		})
+// 		.catch(function(err) {
+// 			res.json(err);
+// 		});
+// });
+
+// //Route for marking an Article as saved
+// app.post("/articles/saved/:id", function(req, res) {
+// 	db.Article.findOneAndUpdate({"_id": req.params.id}, {saved: true})
+// 		.then(function(data) {
+// 			res.send(data);
+// 		})
+// 		.catch(function(err) {
+// 			res.json(err);
+// 		});
+// });
+
+
+// //Route for removing an article from the saved field
+// app.post("/articles/saved/:id/remove", function(req, res) {
+// 	db.Article.findOneAndUpdate({"_id": req.params.id}, {saved: false})
+// 		.then(function(data) {
+// 			res.send(data);
+// 		})
+// 		.catch(function(err) {
+// 			res.json(err);
+// 		});
+// });
+
+// // Route for saving/updating an Article's associated Comment
+// app.post("/articles/:id", function(req, res) {
+// 	db.Comment.create(req.body)
+// 		.then(function(dbComment) {
+// 			return db.Article.findOneAndUpdate({ _id: req.params.id }, 
+// 				{ $push: { comment: dbComment._id} }, 
+// 				{ new: true });
+// 		})
+// 		.catch(function(err) {
+// 			res.json(err);
+// 		});
+// });
+
+// app.delete("/comments/:id", function(req, res) {
+// 	console.log(req.params.id);
+// 	// eslint-disable-next-line quotes
+// 	db.Comment.deleteOne( {_id: 'ObjectId('+req.params.id+')'} );
+// });
 
 app.listen(PORT, function () {
 	console.log("Server listening on: http://localhost:" + PORT);
