@@ -37,7 +37,7 @@ var MONGODB_URI = process.env.MONGODB_URI || "mongodb://localhost/CurrentConvers
 mongoose.connect(MONGODB_URI, { useNewUrlParser: true });
 // // Connect to the Mongo DB -- old connection
 // mongoose.connect("mongodb://localhost/CurrentConverse", { useNewUrlParser: true });
-var results = [];
+//var results = [];
 
 
 // Routes
@@ -98,6 +98,8 @@ app.get("/scrape", function (req, res) {
 		res.send("Scrape Complete");
 	});
 });
+
+
 
 // Route for getting all Articles from the db
 app.get("/", function(req, res) {
